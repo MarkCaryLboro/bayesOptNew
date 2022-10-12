@@ -9,7 +9,6 @@ classdef ( Abstract = true ) surrogateModel < handle
         Y           double                                                  % Response data
         Yname       string                                                  % Response name 
         Xname       string                                                  % Array of predictor names
-        ModelObj                                                            % Model object
         Trained     logical         = false                                 % Model trained state flag
         Xunits      string                                                  % Units for input variables
         Yunits      string                                                  % Units for response variable
