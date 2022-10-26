@@ -6,7 +6,6 @@ classdef ucb < acqFcn
     end % Abstract constant properties    
     
     properties ( SetAccess = protected )
-        Beta  (1,1) double { mustBePositive( Beta ), mustBeReal( Beta ) } = 0.01
         Scale (1,1) double { mustBePositive( Scale ), mustBeReal( Scale ) } = 1
     end % protected properties
 
@@ -40,7 +39,7 @@ classdef ucb < acqFcn
             % Beta  --> Hyperparameter value
             %--------------------------------------------------------------
             arguments
-                obj (1,1)   ucb        {mustBeNonempty( obj )}
+                obj (1,1)   ucb       {mustBeNonempty( obj )}
                 X   (:,:)   double    {mustBeNonempty( X )}
                 Beta  (1,1) double    { mustBeGreaterThanOrEqual( Beta, 0),...
                                         mustBeLessThanOrEqual( Beta, 1 )} = obj.Beta
@@ -63,8 +62,8 @@ classdef ucb < acqFcn
             %--------------------------------------------------------------
             arguments
                 obj  (1,1)   ucb      {mustBeNonempty( obj )}
-                Beta (1,1)   double  { mustBeGreaterThan( Beta, 0),...
-                                       mustBeLessThan( Beta, 1 )} = 0.01   
+                Beta (1,1)   double   { mustBeGreaterThan( Beta, 0),...
+                                        mustBeLessThan( Beta, 1 )} = 0.01   
             end
             obj.Beta = Beta;
         end % setBeta
@@ -80,7 +79,7 @@ classdef ucb < acqFcn
             % Scale --> (double) hyper-parameter value
             %--------------------------------------------------------------
             arguments
-                obj  (1,1)   ucb      { mustBeNonempty( obj ) }
+                obj  (1,1)   ucb     { mustBeNonempty( obj ) }
                 Scale (1,1)  double  { mustBePositive( Scale ),...
                                        mustBeReal( Scale ) } = 1   
             end

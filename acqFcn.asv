@@ -22,7 +22,7 @@ classdef ( Abstract = true) acqFcn < handle
 
     methods ( Abstract = true )
         Y = evalFcn( obj, X )                                               % Evaluate the acquisition function at the points supplied
-        obj = setBeta( obj, Beta )                                          % Set the hyper-parameter value
+        obj = setBeta( obj )
     end % Abstract method signatures
 
     methods

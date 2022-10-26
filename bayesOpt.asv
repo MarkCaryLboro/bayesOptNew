@@ -8,7 +8,6 @@ classdef bayesOpt
         Y        (:,1)   double                                             % Current function query data
         Xnext    (1,:)   double                                             % Next point to query
         ModelObj (1,1)                                                      % Surrogate model object
-        HyperPar (1,1)   double                                             % Hyper-parameter
     end % dependent properties
 
     properties ( SetAccess = protected )
@@ -84,13 +83,16 @@ classdef bayesOpt
             % Yint  --> prediction interval
             %--------------------------------------------------------------
             arguments
-                obj   (1,1)     
-                Xnew            double          = obj.AcqObj.ModelObj.X     
-                Alpha           double          = 0.05
+                obj   (1,1)     gpr
+                Xnew            double           = obj.AcqObj.ModelObj.X     
+                Alpha           double  = 0.05
             end
-            [ Ypred, Ysd, Yint ] = obj.AcqObj.ModelObj.predict( Xnew,...
+            [ Ypred, Ysd, Yint ] = obj.AcqObj.ModelObj.predict( obj.ModelObj,...
+                Xnew, 'Alpha',...
                                             Alpha );
         end % predict
+
+
 
         function obj = addNewQuery( obj, Xnew, Ynew )
             %--------------------------------------------------------------
@@ -183,11 +185,7 @@ classdef bayesOpt
         function Xnext = get.Xnext( obj )
             Xnext = obj.AcqObj.BestX;
         end % get.Xnext
-        
-        function B = get.HyperPar( obj )
-            B = obj.AcqObj.Beta;
-        end % get.Beta
-            
+
         function X = get.X( obj )
             % Return the current function query input locations
             X = obj.AcqObj.Data;

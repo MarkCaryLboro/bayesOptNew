@@ -6,75 +6,75 @@ classdef ei < acqFcn
     end % Abstract constant properties
     
     properties ( SetAccess = protected )
-        Xi  (1,1)   double { mustBePositive( Xi ), mustBeReal( Xi ) } = 0.01
+        Beta  (1,1)   double { mustBePositive( Beta ), mustBeReal( Beta ) } = 0.01
     end
 
     methods
-        function obj = ei( ModelObj, Xi )
+        function obj = ei( ModelObj, Beta )
             %--------------------------------------------------------------
             % Expected Improvement (EI) class constructor
             %
-            % obj = ei( ModelObj, Xi );
+            % obj = ei( ModelObj, Beta );
             %
             % Input Arguments:
             %
             % ModelObj  --> Surrogate model for system
-            % Xi        --> (double) Hyperparameter {0.01}
+            % Beta        --> (double) Hyperparameter {0.01}
             %--------------------------------------------------------------
             arguments
                 ModelObj (1,1)          { mustBeNonempty( ModelObj ) }
-                Xi       (1,1) double   { mustBeGreaterThanOrEqual( Xi, 0),...
-                                          mustBeLessThanOrEqual( Xi, 1)} = 0.01
+                Beta       (1,1) double   { mustBeGreaterThanOrEqual( Beta, 0),...
+                                          mustBeLessThanOrEqual( Beta, 1)} = 0.01
             end
             if ( nargin > 1 )
-                obj.Xi = Xi;
+                obj.Beta = Beta;
             end
             obj.ModelObj = ModelObj;
         end % constructor
 
-        function Fcn = evalFcn( obj, X, Xi )
+        function Fcn = evalFcn( obj, X, Beta )
             %--------------------------------------------------------------
             % Evaluate the EI acquisition function at the location
             % specified
             %
-            % Fcn = obj.evalFcn( X, Xi );
+            % Fcn = obj.evalFcn( X, Beta );
             %
             % Input Arguments:
             %
             % X     --> Points to evaluate the acquisition function
-            % Xi    --> Hyperparameter value
+            % Beta    --> Hyperparameter value
             %--------------------------------------------------------------
             arguments
                 obj (1,1)   ei          {mustBeNonempty( obj )}
                 X   (:,:)   double      {mustBeNonempty( X )}
-                Xi  (1,1)   double      { mustBeGreaterThanOrEqual( Xi, 0),...
-                                          mustBeLessThanOrEqual( Xi, 1 )} = obj.Xi
+                Beta  (1,1)   double      { mustBeGreaterThanOrEqual( Beta, 0),...
+                                          mustBeLessThanOrEqual( Beta, 1 )} = obj.Beta
             end
-            obj = obj.setXi( Xi );
+            obj = obj.setBeta( Beta );
             [ Z, Mu, Sigma ] = obj.calcZscore( X );
             Zpdf = normpdf( Z );
             Zcdf = normcdf( Z );
-            Fcn = -( Mu - obj.Fmax - obj.Xi ) .* Zcdf - Sigma .* Zpdf;
+            Fcn = -( Mu - obj.Fmax - obj.Beta ) .* Zcdf - Sigma .* Zpdf;
             Fcn = ( Sigma > 0 ) .* Fcn;
         end % evalFcn
 
-        function obj = setXi( obj, Xi )
+        function obj = setBeta( obj, Beta )
             %--------------------------------------------------------------
             % Set the hyperparameter
             %
-            % obj = obj.setXi( Xi )
+            % obj = obj.setBeta( Beta )
             %
             % Input Arguments:
             %
-            % Xi    --> (double) hyper-parameter value ( 0 <= Xi <= 1 )
+            % Beta    --> (double) hyper-parameter value ( 0 <= Beta <= 1 )
             %--------------------------------------------------------------
             arguments
-                obj (1,1)   ei          {mustBeNonempty( obj )}
-                Xi  (1,1)   double      { mustBeGreaterThanOrEqual( Xi, 0),...
-                    mustBeLessThanOrEqual( Xi, 1 )} = 0.01
+                obj (1,1)             {mustBeNonempty( obj )}
+                Beta  (1,1)   double  { mustBeGreaterThanOrEqual( Beta, 0),...
+                    mustBeLessThanOrEqual( Beta, 1 )} = 0.01
             end
-            obj.Xi = Xi;
-        end % setXi
+            obj.Beta = Beta;
+        end % setBeta
 
         function [ Z, Mu, Sigma ] = calcZscore( obj, X )
             %--------------------------------------------------------------
@@ -98,7 +98,7 @@ classdef ei < acqFcn
             end
             [ Mu, Sigma ] = obj.ModelObj.predict( X );
             try
-                Z = ( Mu - obj.ModelObj.Fmax - obj.Xi ) ./ Sigma;
+                Z = ( Mu - obj.ModelObj.Fmax - obj.Beta ) ./ Sigma;
             catch 
                 Z = zeros( size( Mu ) );
             end
