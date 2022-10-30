@@ -170,6 +170,7 @@ classdef gpr < surrogateModel
                 Xnew            double           = obj.X     
                 Alpha           double  = 0.05
             end
+            assert( obj.Trained, 'Must first train the model using the "trainModel" method before predictions can be made')
             Xnew = obj.code( Xnew );
             [ Ypred, Ysd, Yint ] = predict( obj.ModelObj, Xnew, 'Alpha',...
                                             Alpha );
