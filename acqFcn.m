@@ -5,10 +5,13 @@ classdef ( Abstract = true) acqFcn < handle
         FcnName         acqFcnType
     end % Abstract constant properties
 
+    properties ( SetAccess = protected, Abstract = true )
+        Beta                                                                % Hyperparameter
+    end
+
     properties ( SetAccess = protected )
         ModelObj (1,1)                                                      % Surrogate model object
         BestX    (1,:)  double = -inf
-        Beta     (1,:)  double 
     end % protected properties
 
     properties ( SetAccess = protected, Dependent )

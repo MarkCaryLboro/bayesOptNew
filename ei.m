@@ -6,7 +6,7 @@ classdef ei < acqFcn
     end % Abstract constant properties
     
     properties ( SetAccess = protected )
-        Beta  (1,1)   double { mustBePositive( Beta ), mustBeReal( Beta ) } = 0.01
+        Beta  
     end
 
     methods
@@ -48,7 +48,7 @@ classdef ei < acqFcn
                 obj (1,1)   ei          {mustBeNonempty( obj )}
                 X   (:,:)   double      {mustBeNonempty( X )}
                 Beta  (1,1)   double      { mustBeGreaterThanOrEqual( Beta, 0),...
-                                          mustBeLessThanOrEqual( Beta, 1 )} = obj.Beta
+                                          mustBeLessThanOrEqual( Beta, 10 )} = obj.Beta
             end
             obj = obj.setBeta( Beta );
             [ Z, Mu, Sigma ] = obj.calcZscore( X );

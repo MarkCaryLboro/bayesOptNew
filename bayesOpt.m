@@ -9,6 +9,8 @@ classdef bayesOpt
         Xnext    (1,:)   double                                             % Next point to query
         ModelObj (1,1)                                                      % Surrogate model object
         HyperPar (1,1)   double                                             % Hyper-parameter
+        Xbest    (1,:)   double                                             % Best known input configuration
+        Ybest    (1,1)   double                                             % Best known function query
     end % dependent properties
 
     properties ( SetAccess = protected )
@@ -40,6 +42,25 @@ classdef bayesOpt
             Str = strjoin( [ Str, "( ModelObj )"], "" );
             obj.AcqObj = eval( Str );
         end % constructor
+
+        function obj = setHyperPar( obj, Beta )
+            %--------------------------------------------------------------
+            % Set the hyperparameter value for the acquisition function
+            % optimisation problem
+            %
+            % obj = obj.setHyperPar( Beta );
+            %
+            % Input Arguments:
+            %
+            % Beta  --> (double) Hyperparameter value
+            %--------------------------------------------------------------
+            arguments
+                obj     (1,1)           { mustBeNonempty( obj ) }
+                Beta    (1,1)   double
+            end
+            A = obj.AcqObj;
+            A.setBeta( Beta );
+        end % setHyperPar
 
         function obj = setTrainingData( obj, X, Y )
             %--------------------------------------------------------------
@@ -152,30 +173,28 @@ classdef bayesOpt
             %--------------------------------------------------------------
             Problem.options.Display = "iter";
             Problem.solver = "fmincon"; 
-            %==============================================================
-            % To Do: Generalise the acquisition function object to have a
-            % hyper-parameter Dependent property that is an abstract member
-            %==============================================================
+            %--------------------------------------------------------------
+            % Set the hyperparameter
+            %--------------------------------------------------------------
             switch lower( class( obj.AcqObj ) )
                 case 'ei'
-                    Problem.objective = @(X)obj.AcqObj.evalFcn( X,...
-                                                       obj.AcqObj.Xi );
+                    B = obj.HyperPar;
                 case 'ucb'
                     B = obj.AcqObj.sampleGamma( numel(obj.Y) );
-                    Problem.objective = @(X)obj.AcqObj.evalFcn( X, B );
                 otherwise
             end
+            Problem.objective = @(X)obj.AcqObj.evalFcn( X, B );
             if isinf( obj.AcqObj.BestX )
                 %----------------------------------------------------------
-                % Select a strating point
+                % Select a starting point
                 %----------------------------------------------------------
-                [ ~, Idx ] = max( obj.AcqObj.ModelObj.predict( obj.X ) );
-                Xmax = obj.AcqObj.Data( Idx, : );
+                [ ~, Idx ] = max( obj.Y );
+                Xmax = obj.X( Idx, : );
                 obj.AcqObj = obj.AcqObj.setBestX( Xmax );
             end
             Problem.x0 = obj.AcqObj.BestX;
             BestX = fmincon( Problem );
-            obj.AcqObj = obj.AcqObj.setBestX( BestX );
+            obj.AcqObj.setBestX( BestX );
         end % acqFcnMaxTemplate
     end % Concrete ordinary methods
 
@@ -197,6 +216,18 @@ classdef bayesOpt
             % Return the current function query input locations
             Y = obj.AcqObj.Response;
         end % get.Y
+
+        function Y = get.Ybest( obj )
+            % Return the best query from the sample pool
+            Y = max( obj.Y );
+        end % get.Ybest
+
+        function X = get.Xbest( obj )
+            % Return the input configuration from the sample pool
+            % corresponding to the best function query
+            [ ~, Idx ] = max( obj.Y );
+            X = obj.X( Idx, : );
+        end % get.Xbest
 
         function M = get.Model( obj )
             % Return the surrogate model type

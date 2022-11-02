@@ -7,8 +7,7 @@ classdef ucb < acqFcn
     
     properties ( SetAccess = protected )
         Scale (1,1) double { mustBePositive( Scale ), mustBeReal( Scale ) } = 1
-        Beta  (1,1) double { mustBeGreaterThan( Beta, 0 ), ...
-                             mustBeLessThan( Beta, 1 ) } = 0.02
+        Beta  
     end % protected properties
 
     methods
