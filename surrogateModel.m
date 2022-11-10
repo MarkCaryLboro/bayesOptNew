@@ -55,7 +55,7 @@ classdef ( Abstract = true ) surrogateModel < handle
             end
             Xnew = [ obj.X ; Xnew ];
             Ynew = [ obj.Y; Ynew];
-            obj = setTrainingData( obj, Xnew, Ynew );
+            obj = obj.setTrainingData( Xnew, Ynew );
             obj = obj.trainModel();
         end % updateModel
 
