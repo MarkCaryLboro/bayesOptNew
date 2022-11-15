@@ -194,7 +194,7 @@ classdef ( Abstract = true ) surrogateModel < handle
             %
             % X --> (double) data matrix
             %--------------------------------------------------------------
-            [ A, B, M ] = obj.dataCodingInfo();
+            [ A, B, M ] = obj.dataCodingInfo( obj.X );
             Xc = 2 * ( X - M ) ./ ( B - A );
         end % code
     end % ordinary method signatures
@@ -212,8 +212,9 @@ classdef ( Abstract = true ) surrogateModel < handle
             % B --> upper limit for data {obj.Xhi}
             % M --> median of data range
             %--------------------------------------------------------------
-            A = obj.Xlo;
-            B = obj.Xhi;
+            
+            A = min( D );
+            B = max( D );
             M = mean( [ B; A ] );
         end % dataCodingInfo
     end % protected method signatures
@@ -229,8 +230,7 @@ classdef ( Abstract = true ) surrogateModel < handle
             %
             % A     --> (double) Lower limit for data coding: A --> [-1]
             %--------------------------------------------------------------
-            if ( nargin < 2 ) || isempty( A ) || ( ( numel( A ) ~= obj.N )...
-                                              && ~isempty( obj.X ) )
+            if ( nargin < 2 ) || isempty( A ) || ( numel( A ) ~= obj.N )
                 %----------------------------------------------------------
                 % Apply default
                 %----------------------------------------------------------
@@ -249,8 +249,7 @@ classdef ( Abstract = true ) surrogateModel < handle
             %
             % B     --> (double) Lower limit for data coding: B --> [+1]
             %--------------------------------------------------------------
-            if ( nargin < 2 ) || isempty( B ) || ( ( numel( B ) ~= obj.N )...
-                                              && ~isempty( obj.X ) )
+            if ( nargin < 2 ) || isempty( B ) || ( numel( B ) ~= obj.N )
                 %----------------------------------------------------------
                 % Apply default
                 %----------------------------------------------------------

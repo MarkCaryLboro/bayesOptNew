@@ -44,7 +44,7 @@ classdef ( Abstract = true) acqFcn < handle
                 obj  (1,1)         { mustBeNonempty( obj ) }
                 Xmax (1,:)  double { mustBeNonempty( Xmax ) } = obj.BestX
             end
-            obj.BestX = Xmax( 1,: );
+            if isinf(             obj.BestX = Xmax( 1,: );
         end % setBestX
 
         function obj = addFcnSample2Data( obj, Xnew, Ynew )

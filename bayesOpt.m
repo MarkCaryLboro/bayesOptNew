@@ -11,6 +11,8 @@ classdef bayesOpt
         HyperPar (1,1)   double                                             % Hyper-parameter
         Xbest    (1,:)   double                                             % Best known input configuration
         Ybest    (1,1)   double                                             % Best known function query
+        Xlo      (1,:)   double                                             % Lower bound for x-data (for data coding)
+        Xhi      (1,:)   double                                             % Upper bound for x-data (for data coding)
     end % dependent properties
 
     properties ( SetAccess = protected )
@@ -85,6 +87,7 @@ classdef bayesOpt
             %--------------------------------------------------------------
             M.setTrainingData( X, Y );
             M.trainModel;
+            obj.AcqObj.setBestX( M.Xmax );
         end % setTrainingData
 
         function [ Ypred, Ysd, Yint ] = predict( obj, Xnew, Alpha )
@@ -133,6 +136,26 @@ classdef bayesOpt
             obj.AcqObj.addFcnSample2Data( Xnew, Ynew );
         end % addNewQuery
 
+        function obj = conDataCoding( obj, A, B )
+            %--------------------------------------------------------------
+            % Configure the data coding
+            %
+            % obj = obj.conDataCoding( A, B );
+            %
+            % Input Arguments:
+            %
+            % A     --> (double) Lower bound for x-data 
+            % B     --> (double) Upper bound for x-data 
+            %--------------------------------------------------------------
+            arguments
+                obj (1,1)   bayesOpt    { mustBeNonempty( obj ) }
+                A   (1,:)   double      { mustBeNonempty( A ) }
+                B   (1,:)   double      { mustBeNonempty( B ) }
+            end
+            M = obj.ModelObj;
+            M.conDataCoding( A, B );
+        end % conDataCoding
+        
         function obj = acqFcnMaxTemplate( obj, Args )
             %--------------------------------------------------------------
             % Optimise the acquisition function given the current training
@@ -177,14 +200,13 @@ classdef bayesOpt
             % Set the hyperparameter
             %--------------------------------------------------------------
             switch lower( class( obj.AcqObj ) )
-                case 'ei'
-                    B = obj.HyperPar;
                 case 'ucb'
                     B = obj.AcqObj.sampleGamma( numel(obj.Y) );
                 otherwise
+                    B = obj.HyperPar;
             end
             Problem.objective = @(X)obj.AcqObj.evalFcn( X, B );
-            if isinf( obj.AcqObj.BestX )
+            if isinf( obj.Xbest )
                 %----------------------------------------------------------
                 % Select a starting point
                 %----------------------------------------------------------
@@ -192,7 +214,7 @@ classdef bayesOpt
                 Xmax = obj.X( Idx, : );
                 obj.AcqObj = obj.AcqObj.setBestX( Xmax );
             end
-            Problem.x0 = obj.AcqObj.BestX;
+            Problem.x0 = obj.Xbest;
             BestX = fmincon( Problem );
             obj.AcqObj.setBestX( BestX );
         end % acqFcnMaxTemplate
@@ -211,6 +233,16 @@ classdef bayesOpt
             % Return the current function query input locations
             X = obj.AcqObj.Data;
         end % get.X
+
+        function A = get.Xlo( obj )
+            % Return the lower data bound for coding
+            A = obj.ModelObj.Xlo;
+        end % get.Xlo
+
+        function B = get.Xhi( obj )
+            % Return the lower data bound for coding
+            B = obj.ModelObj.Xhi;
+        end % get.Xhi
 
         function Y = get.Y( obj )
             % Return the current function query input locations
