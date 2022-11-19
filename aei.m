@@ -7,7 +7,19 @@ classdef aei < acqFcn
     
     properties ( SetAccess = protected )
         Beta  
+        MnExpRate  (1,:)    double     = 0.25
+        MxExpRate  (1,:)    double     = 2.00
     end
+
+    properties ( Access = protected )
+        Count      (1,1)    int16     { mustBeGreaterThanOrEqual( Count,... % Counter for adjusting memory rate
+                                                                  0 ) }     
+        CntFlg     (1,1)    logical    = true                               % Set to true to update counter 
+    end % protected properties
+
+    properties ( SetAccess = protected, Dependent = true )
+        R                                                                   % Exploration rate
+    end % Dependent properties
 
     methods
         function obj = aei( ModelObj, Beta )
@@ -23,11 +35,31 @@ classdef aei < acqFcn
             %--------------------------------------------------------------
             arguments
                 ModelObj (1,1)         { mustBeNonempty( ModelObj ) }
-                Beta     (1,4)  double  = [ 0.5, 1, 1.1, 0.25 ]
+                Beta     (1,3)  double      = [ 1, 1.025, 0.25 ]            % [ R0, M, D ]
             end
-            obj.Beta = Beta;
+            obj = obj.setBeta( Beta );
             obj.ModelObj = ModelObj;
         end % constructor
+
+        function obj = setExpRateLimits( obj, MnRate, MxRate )
+            %--------------------------------------------------------------
+            % Set the minimum and maximum exploration rates
+            %
+            % obj = obj.setExpRateLimits( MnRate, MxRate );
+            %
+            % Input Arguments:
+            %
+            % MnRate    --> (double) Minimum exploration rate
+            % MxRate    --> (double) Maximum exploration rate
+            %--------------------------------------------------------------
+            arguments
+                obj     (1,1)   aei     { mustBeNonempty( obj ) }
+                MnRate  (1,1)   double  { mustBeGreaterThan( MnRate, 0 ) } = obj.MnRate
+                MxRate  (1,1)   double  { mustBeLessThan( MxRate, 2.5 ) } = obj.MxRate
+            end
+            obj.MnExpRate = MnRate;
+            obj.MxExpRate = MxRate;
+        end % setExpRateLimits
 
         function Fcn = evalFcn( obj, X, Beta )
             %--------------------------------------------------------------
@@ -44,24 +76,31 @@ classdef aei < acqFcn
             arguments
                 obj     (1,1)   aei         {mustBeNonempty( obj )}
                 X       (:,:)   double      {mustBeNonempty( X )}
-                Beta    (1,4) double      = obj.Beta
+                Beta    (1,3) double      = obj.Beta
             end
             obj = obj.setBeta( Beta );
-            [ A, R0, M, D ] = obj.getHyperParams();
-            if ( norm( X - Xstar, 2 ) < D )
+            [ ~, ~, D ] = obj.getHyperParams();
+            Xc = obj.ModelObj.code( X );
+            Xstar = obj.ModelObj.code( obj.BestX );
+            if ( norm( Xc - Xstar, 2 ) < D )
                 %----------------------------------------------------------
                 % Increase the exploration rate
                 %----------------------------------------------------------
-                R = R0 * M;
-                obj = obj.setBeta( [ A, R, M, D ] );
+                obj.Count = obj.Count + 1;
             else
-                R = R0;
+                %----------------------------------------------------------
+                % Decrease the exploration rate
+                %----------------------------------------------------------
+                obj.Count = obj.Count - 1;
             end
-            P = obj.evalPenalty( X );
+            %--------------------------------------------------------------
+            % Calculate the acquisition function
+            %--------------------------------------------------------------
             [ Z, Mu, Sigma ] = obj.calcZscore( X );
             Zpdf = normpdf( Z );
             Zcdf = normcdf( Z );
-            Fcn = -( Mu - obj.Fmax ) .* Zcdf - R * Sigma .* Zpdf + P;
+            Fcn = ( Mu - obj.Fmax ) .* Zcdf + obj.R * Sigma .* Zpdf;
+            Fcn = - Fcn;
             Fcn = ( Sigma > 0 ) .* Fcn;
         end % evalFcn
 
@@ -77,9 +116,9 @@ classdef aei < acqFcn
             %--------------------------------------------------------------
             arguments
                 obj  (1,1)      aei       {mustBeNonempty( obj )}
-                Beta (1,4)      double  = [ 0.5, 1, 1.1, 0.25 ]
+                Beta (1,3)      double  = [ 1, 1.025, 0.25 ]                % [ R0, M, D ]
             end
-            Ok = Beta >= [ sqrt(eps), 1, 1, sqrt(eps) ];
+            Ok = ( Beta >= [ 0.1, 1, sqrt(eps) ] );
             assert( all( Ok ), "Hyperparameter outside minimium bound" );
             obj.Beta = Beta;
         end % setBeta
@@ -113,57 +152,35 @@ classdef aei < acqFcn
         end % calcZscore
     end % ordinary method signatures
 
+    methods
+        function R = get.R( obj )
+            % Return the exploration rate
+            [ R0, M ] = obj.getHyperParams();
+            R = R0 * M .^ double( obj.Count );
+            %--------------------------------------------------------------
+            % Apply clips
+            %--------------------------------------------------------------
+            R = max( [ R, obj.MnExpRate] );
+            R = min( [ R, obj.MxExpRate ] );
+        end % get.R
+    end % Set/Get methods
+
     methods ( Access = private )
-        function [ A, R, M, D] = getHyperParams( obj )
+        function [ R0, M, D] = getHyperParams( obj )
             %--------------------------------------------------------------
             % Return the hyperparameters
             %
-            % [ A, R, M, D] = obj.getHyperParams();
+            % [ R0, M, D] = obj.getHyperParams();
             %
             % Output Arguments:
             %
-            % A     --> Penalty function gain
-            % R     --> Exploration rate
+            % R0    --> Initial exploration rate
             % M     --> Exploration momentum
             % D     --> Critical distance
             %--------------------------------------------------------------
-            A = obj.Beta(1);
-            R = obj.Beta(2);
-            M = obj.Beta(3);
-            D = obj.Beta(4);
+            R0 = obj.Beta(1);
+            M = obj.Beta(2);
+            D = obj.Beta(3);
         end % getHyperParams
-
-        function P = evalPenalty( obj, X )
-            %--------------------------------------------------------------
-            % Evaluate the penalty function: inverse squared distance!
-            %
-            % P = obj.evalPenalty( X );
-            %
-            % Input Arguments:
-            %
-            % X       --> Points to evaluate the acquisition function
-            %--------------------------------------------------------------
-            A = obj.getHyperParams();
-            %--------------------------------------------------------------
-            % Carry out the distance comparison in coded units
-            %--------------------------------------------------------------
-%             Xc = obj.ModelObj.code( X );
-%             Xstar = obj.ModelObj.code( obj.BestX );
-            %--------------------------------------------------------------
-            % Calculate Euclidean distance to best known result
-            %--------------------------------------------------------------
-            P = vecnorm( X - obj.BestX, 2, 2 );
-            if P ~= 0
-                %----------------------------------------------------------
-                % Normal case
-                %----------------------------------------------------------
-                P = A ./ P.^2;
-            else
-                %----------------------------------------------------------
-                % Trap infinity penalty case
-                %----------------------------------------------------------
-                P = A ./ 0.001;
-            end
-        end % evalPenalty
     end % private method signatures
 end % classdef

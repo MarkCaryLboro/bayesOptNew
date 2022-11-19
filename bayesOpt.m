@@ -205,7 +205,8 @@ classdef bayesOpt
                 otherwise
                     B = obj.HyperPar;
             end
-            Problem.objective = @(X)obj.AcqObj.evalFcn( X, B );
+            A = obj.AcqObj;
+            Problem.objective = @(X)A.evalFcn( X, B );
             if isinf( obj.Xbest )
                 %----------------------------------------------------------
                 % Select a starting point
