@@ -12,9 +12,9 @@ classdef aei < acqFcn
     end
 
     properties ( Access = protected )
-        Count      (1,1)    int16     { mustBeGreaterThanOrEqual( Count,... % Counter for adjusting memory rate
-                                                                  0 ) }     
-        CntFlg     (1,1)    logical    = true                               % Set to true to update counter 
+        Count      (1,1)    int64     { mustBeGreaterThanOrEqual( Count,... % Counter for determining when to adjust memory rate
+                                                                  0 ) } = 0
+        Reset      (1,1)    logical = true
     end % protected properties
 
     properties ( SetAccess = protected, Dependent = true )
@@ -35,7 +35,7 @@ classdef aei < acqFcn
             %--------------------------------------------------------------
             arguments
                 ModelObj (1,1)         { mustBeNonempty( ModelObj ) }
-                Beta     (1,3)  double      = [ 1, 1.025, 0.25 ]            % [ R0, M, D ]
+                Beta     (1,3)  double      = [ 1.1, 1.25, 0.05 ]           % [ R0, M, D ]
             end
             obj = obj.setBeta( Beta );
             obj.ModelObj = ModelObj;
@@ -78,21 +78,27 @@ classdef aei < acqFcn
                 X       (:,:)   double      {mustBeNonempty( X )}
                 Beta    (1,3) double      = obj.Beta
             end
+            %--------------------------------------------------------------
+            % Need a persitent variable for the rate update
+            %--------------------------------------------------------------
+            persistent Xlast
+            if isempty( Xlast ) || obj.Reset
+                Xlast = X;
+                obj.Reset = false;
+            end
             obj = obj.setBeta( Beta );
             [ ~, ~, D ] = obj.getHyperParams();
             Xc = obj.ModelObj.code( X );
             Xstar = obj.ModelObj.code( obj.BestX );
-            if ( norm( Xc - Xstar, 2 ) < D )
+            CodedXlast = obj.ModelObj.code( Xlast );
+            if ( norm( Xc - Xstar, 2 ) < D ) &&...
+               ( norm( Xc - CodedXlast ) > 1e-4 )
                 %----------------------------------------------------------
                 % Increase the exploration rate
                 %----------------------------------------------------------
                 obj.Count = obj.Count + 1;
-            else
-                %----------------------------------------------------------
-                % Decrease the exploration rate
-                %----------------------------------------------------------
-                obj.Count = obj.Count - 1;
             end
+            Xlast = X;
             %--------------------------------------------------------------
             % Calculate the acquisition function
             %--------------------------------------------------------------
@@ -150,6 +156,16 @@ classdef aei < acqFcn
                 Z = zeros( size( Mu ) );
             end
         end % calcZscore
+
+        function obj = resetCounter( obj )
+            %--------------------------------------------------------------
+            % Reset the exploration rate index counter to zero
+            %
+            % obj = obj.resetCounter();
+            %--------------------------------------------------------------
+            obj.Count = 0;
+            obj.Reset = true;
+        end % resetCounter
     end % ordinary method signatures
 
     methods

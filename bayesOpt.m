@@ -205,8 +205,13 @@ classdef bayesOpt
                 otherwise
                     B = obj.HyperPar;
             end
-            A = obj.AcqObj;
-            Problem.objective = @(X)A.evalFcn( X, B );
+            switch lower( class( obj.AcqObj ) )
+                case 'aei'
+                    % reset the exploration rate index counter every time
+                    % the optimisation is called
+                    obj.AcqObj.resetCounter();
+            end
+            Problem.objective = @(X)obj.AcqObj.evalFcn( X, B );
             if isinf( obj.Xbest )
                 %----------------------------------------------------------
                 % Select a starting point
