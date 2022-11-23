@@ -12,6 +12,8 @@ classdef ( Abstract = true ) surrogateModel < handle
         Trained     logical         = false                                 % Model trained state flag
         Xunits      string                                                  % Units for input variables
         Yunits      string                                                  % Units for response variable
+        Xlo         double                                                  % Lower bound for x-data (for data coding)
+        Xhi         double                                                  % Upper bound for x-data (for data coding)
     end % protected and abstract properties
 
     properties ( Access = protected, Dependent, Abstract = true )
@@ -153,9 +155,37 @@ classdef ( Abstract = true ) surrogateModel < handle
             end
             obj.Yname = Yname;
         end % setYname
-    end % ordinary method signatures
 
-    methods ( Access = protected )
+        function obj = conDataCoding( obj, A, B )
+            %--------------------------------------------------------------
+            % Configure the data coding
+            %
+            % obj = obj.conDataCoding( A, B );
+            %
+            % Input Arguments:
+            %
+            % A     --> (double) Lower bound for x-data 
+            % B     --> (double) Upper bound for x-data 
+            %--------------------------------------------------------------
+            arguments
+                obj     (1,1)               { mustBeNonempty( obj ) }
+                A       (1,:)   double
+                B       (1,:)   double
+            end
+            try
+                obj = obj.setXlo( A );
+            catch
+                % apply default
+                obj = obj.setXlo();
+            end
+            try
+                obj = obj.setXhi( B );
+            catch
+                % apply default
+                obj = obj.setXhi();
+            end
+        end % conDataCoding
+
         function Xc = code( obj, X )
             %--------------------------------------------------------------
             % Code data onto the interval [-1,1]
@@ -164,10 +194,71 @@ classdef ( Abstract = true ) surrogateModel < handle
             %
             % X --> (double) data matrix
             %--------------------------------------------------------------
-            [ A, B, M ] = obj.dataCodingInfo( obj.X );
+            [ A, B, M ] = obj.dataCodingInfo();
             Xc = 2 * ( X - M ) ./ ( B - A );
         end % code
+    end % ordinary method signatures
+
+    methods ( Access = protected )
+        function [ A, B, M ] = dataCodingInfo( obj )
+            %--------------------------------------------------------------
+            % Return data coding information
+            %
+            % [ A, B, M ] = obj.dataCodingInfo();
+            %
+            % Output Arguments:
+            %
+            % A --> lower limit for data {obj.Xlo}
+            % B --> upper limit for data {obj.Xhi}
+            % M --> median of data range
+            %--------------------------------------------------------------
+            A = obj.Xlo;
+            B = obj.Xhi;
+            M = mean( [ B; A ] );
+        end % dataCodingInfo
     end % protected method signatures
+
+    methods ( Access = private )
+        function obj = setXlo( obj, A )
+            %--------------------------------------------------------------
+            % Set the low limit for the data coding
+            %
+            % obj = obj.setXlo( A );
+            %
+            % Input Arguments:
+            %
+            % A     --> (double) Lower limit for data coding: A --> [-1]
+            %--------------------------------------------------------------
+            if ( nargin < 2 ) || isempty( A ) || ( ( numel( A ) ~= obj.N )...
+                                              && ~isempty( obj.X ) )
+                %----------------------------------------------------------
+                % Apply default
+                %----------------------------------------------------------
+                A = min( obj.X );
+            end
+            obj.Xlo = A;
+        end % setXlo
+
+        function obj = setXhi( obj, B )
+            %--------------------------------------------------------------
+            % Set the high limit for the data coding
+            %
+            % obj = obj.setXlo( B );
+            %
+            % Input Arguments:
+            %
+            % B     --> (double) Lower limit for data coding: B --> [+1]
+            %--------------------------------------------------------------
+            if ( nargin < 2 ) || isempty( B ) || ( ( numel( B ) ~= obj.N )...
+                                              && ~isempty( obj.X ) )
+                %----------------------------------------------------------
+                % Apply default
+                %----------------------------------------------------------
+                B = max( obj.X );
+            end
+            obj.Xhi = B;
+        end % setXhi
+    end % private method signatures
 
     methods
         function F = get.Fmax( obj )
@@ -204,25 +295,5 @@ classdef ( Abstract = true ) surrogateModel < handle
     end
 
     methods ( Access = protected, Static = true )
-        function [ A, B, M ] = dataCodingInfo( D )
-            %--------------------------------------------------------------
-            % Return data coding information
-            %
-            % [ A, B, M ] = obj.dataCodingInfo( D );
-            %
-            % Input Arguments:
-            %
-            % D --> (double) Data matrix
-            %
-            % Output Arguments:
-            %
-            % A --> lower limit for data
-            % B --> upper limit for data
-            % M --> median of data range
-            %--------------------------------------------------------------
-            A = min( D );
-            B = max( D );
-            M = mean( [ B; A ] );
-        end % dataCodingInfo
     end % private and static method signatures
 end % classdef

@@ -26,9 +26,7 @@ classdef ei < acqFcn
                 Beta       (1,1) double   { mustBeGreaterThanOrEqual( Beta, 0),...
                                           mustBeLessThanOrEqual( Beta, 1)} = 0.01
             end
-            if ( nargin > 1 )
-                obj.Beta = Beta;
-            end
+            obj.Beta = Beta;
             obj.ModelObj = ModelObj;
         end % constructor
 

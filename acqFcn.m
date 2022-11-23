@@ -21,6 +21,7 @@ classdef ( Abstract = true) acqFcn < handle
 
     properties ( Access = protected, Dependent )
         Fmax     double                                                     % Maximum function evaluation
+        Nvar     double                                                     % Number of input variables               
     end % protected dependent properties
 
     methods ( Abstract = true )
@@ -42,7 +43,7 @@ classdef ( Abstract = true) acqFcn < handle
             %--------------------------------------------------------------
             arguments
                 obj  (1,1)         { mustBeNonempty( obj ) }
-                Xmax (1,:)  double { mustBeNonempty( Xmax ) }
+                Xmax (1,:)  double { mustBeNonempty( Xmax ) } = obj.BestX
             end
             obj.BestX = Xmax( 1,: );
         end % setBestX
@@ -78,6 +79,11 @@ classdef ( Abstract = true) acqFcn < handle
             % Return the current training data response vector
             Y = obj.ModelObj.Y;
         end % get.Response
+
+        function N = get.Nvar( obj )
+            % Return number of variables
+            N = size( obj.Data, 2 );
+        end % get.Nvar
 
         function Fmax = get.Fmax( obj )
             % Return best value of acquisition function
