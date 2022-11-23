@@ -35,7 +35,7 @@ classdef aei < acqFcn
             %--------------------------------------------------------------
             arguments
                 ModelObj (1,1)         { mustBeNonempty( ModelObj ) }
-                Beta     (1,3)  double      = [ 1.1, 1.25, 0.05 ]           % [ R0, M, D ]
+                Beta     (1,3)  double      = [ 1.0, 1.05, 0.05 ]           % [ R0, M, D ]
             end
             obj = obj.setBeta( Beta );
             obj.ModelObj = ModelObj;
@@ -55,10 +55,14 @@ classdef aei < acqFcn
             arguments
                 obj     (1,1)   aei     { mustBeNonempty( obj ) }
                 MnRate  (1,1)   double  { mustBeGreaterThan( MnRate, 0 ) } = obj.MnRate
-                MxRate  (1,1)   double  { mustBeLessThan( MxRate, 2.5 ) } = obj.MxRate
+                MxRate  (1,1)   double  { mustBeLessThan( MxRate, 2.5 ) }  = obj.MxRate
             end
-            obj.MnExpRate = MnRate;
-            obj.MxExpRate = MxRate;
+            try                                                             %#ok<TRYNC> 
+                obj.MnExpRate = MnRate;
+            end
+            try                                                             %#ok<TRYNC> 
+                obj.MxExpRate = MxRate;
+            end
         end % setExpRateLimits
 
         function Fcn = evalFcn( obj, X, Beta )
@@ -122,7 +126,7 @@ classdef aei < acqFcn
             %--------------------------------------------------------------
             arguments
                 obj  (1,1)      aei       {mustBeNonempty( obj )}
-                Beta (1,3)      double  = [ 1, 1.025, 0.25 ]                % [ R0, M, D ]
+                Beta (1,3)      double  = [ 1, 1.05, 0.25 ]                 % [ R0, M, D ]
             end
             Ok = ( Beta >= [ 0.1, 1, sqrt(eps) ] );
             assert( all( Ok ), "Hyperparameter outside minimium bound" );
@@ -146,8 +150,8 @@ classdef aei < acqFcn
             % Sigma - Surrogate model standard deviations
             %--------------------------------------------------------------
             arguments
-                obj (1,1)   aei      { mustBeNonempty( obj ) }
-                X   (:,:)   double  { mustBeNonempty( X ) }                
+                obj (1,1)   aei         { mustBeNonempty( obj ) }
+                X   (:,:)   double      { mustBeNonempty( X ) }                
             end
             [ Mu, Sigma ] = obj.ModelObj.predict( X );
             try
