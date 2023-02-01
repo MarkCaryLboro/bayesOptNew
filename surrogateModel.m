@@ -197,6 +197,41 @@ classdef ( Abstract = true ) surrogateModel < handle
             [ A, B, M ] = obj.dataCodingInfo();
             Xc = 2 * ( X - M ) ./ ( B - A );
         end % code
+
+        function obj = setXlo( obj, A )
+            %--------------------------------------------------------------
+            % Set the low limit for the data coding
+            %
+            % obj = obj.setXlo( A );
+            %
+            % Input Arguments:
+            %
+            % A     --> (double) Lower limit for data coding: A --> [-1]
+            %--------------------------------------------------------------
+            %--------------------------------------------------------------
+            arguments
+                obj (1,1)                       { mustBeNonempty( obj ) }
+                A   (1,:) double = min( obj.X )
+            end
+            obj.Xlo = A;
+        end % setXlo
+
+        function obj = setXhi( obj, B )
+            %--------------------------------------------------------------
+            % Set the high limit for the data coding
+            %
+            % obj = obj.setXlo( B );
+            %
+            % Input Arguments:
+            %
+            % B     --> (double) Lower limit for data coding: B --> [+1]
+            %--------------------------------------------------------------
+            arguments
+                obj (1,1)                       { mustBeNonempty( obj ) }
+                B   (1,:) double = max( obj.X )
+            end
+            obj.Xhi = B;
+        end % setXhi
     end % ordinary method signatures
 
     methods ( Access = protected )
@@ -219,45 +254,6 @@ classdef ( Abstract = true ) surrogateModel < handle
     end % protected method signatures
 
     methods ( Access = private )
-        function obj = setXlo( obj, A )
-            %--------------------------------------------------------------
-            % Set the low limit for the data coding
-            %
-            % obj = obj.setXlo( A );
-            %
-            % Input Arguments:
-            %
-            % A     --> (double) Lower limit for data coding: A --> [-1]
-            %--------------------------------------------------------------
-            if ( nargin < 2 ) || isempty( A ) || ( ( numel( A ) ~= obj.N )...
-                                              && ~isempty( obj.X ) )
-                %----------------------------------------------------------
-                % Apply default
-                %----------------------------------------------------------
-                A = min( obj.X );
-            end
-            obj.Xlo = A;
-        end % setXlo
-
-        function obj = setXhi( obj, B )
-            %--------------------------------------------------------------
-            % Set the high limit for the data coding
-            %
-            % obj = obj.setXlo( B );
-            %
-            % Input Arguments:
-            %
-            % B     --> (double) Lower limit for data coding: B --> [+1]
-            %--------------------------------------------------------------
-            if ( nargin < 2 ) || isempty( B ) || ( ( numel( B ) ~= obj.N )...
-                                              && ~isempty( obj.X ) )
-                %----------------------------------------------------------
-                % Apply default
-                %----------------------------------------------------------
-                B = max( obj.X );
-            end
-            obj.Xhi = B;
-        end % setXhi
     end % private method signatures
 
     methods

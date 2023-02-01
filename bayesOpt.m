@@ -1,5 +1,9 @@
-classdef bayesOpt 
+classdef bayesOpt < handle
     % Bayesian optimisation class
+
+    events
+        AUGMENT
+    end % events
 
     properties ( SetAccess = protected, Dependent  )
         AcqFcn   (1,1)   string                                             % Acquisition function type
@@ -64,28 +68,34 @@ classdef bayesOpt
             A.setBeta( Beta );
         end % setHyperPar
 
-        function obj = setTrainingData( obj, X, Y )
+        function obj = setTrainingData( obj, X, Y, A, B )
             %--------------------------------------------------------------
             % Set the training data
             %
-            % obj = obj.setTrainingData( X, Y );
+            % obj = obj.setTrainingData( X, Y, A, B );
             %
             % Input Arguments:
             %
             % X --> (double) NxC matrix of inputs
             % Y --> (double) Nx1 matrix of response data
+            % A --> (double) Minimum X-data value for coding {min(X)}
+            % B --> (double) Minimum X-data value for coding {max(X)}
             %--------------------------------------------------------------
             arguments
                 obj (1,1)
                 X           double
                 Y   (:,1)   double
-            end
+                A   (1,:)   double = min( X )
+                B   (1,:)   double = max( X )
+            endsetXhi
             M = obj.AcqObj.ModelObj;
             %--------------------------------------------------------------
             % This works because the surrogate model class inherits from
             % the handle class...
             %--------------------------------------------------------------
             M.setTrainingData( X, Y );
+            M.setXlo( A );
+            M.setXHi( B );
             M.trainModel;
             obj.AcqObj.setBestX( M.Xmax );
         end % setTrainingData
