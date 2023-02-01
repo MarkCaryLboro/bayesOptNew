@@ -74,7 +74,7 @@ classdef ( Abstract = true ) surrogateModel < handle
             %--------------------------------------------------------------
             arguments
                 obj (1,1)
-                X           double
+                X   (:,:)   double
                 Y   (:,1)   double
             end
             obj.Trained = false;
