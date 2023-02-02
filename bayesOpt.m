@@ -1,5 +1,9 @@
-classdef bayesOpt 
+classdef bayesOpt < handle
     % Bayesian optimisation class
+
+    events
+        UPDATE                                                              % Run newly requested simulation                                                   
+    end
 
     properties ( SetAccess = protected, Dependent  )
         AcqFcn   (1,1)   string                                             % Acquisition function type
@@ -224,6 +228,15 @@ classdef bayesOpt
             BestX = fmincon( Problem );
             obj.AcqObj.setBestX( BestX );
         end % acqFcnMaxTemplate
+
+        function broadcastUpdate( obj )
+            %--------------------------------------------------------------
+            % Broadcast the UPDATE message to generate a new function query
+            %
+            % obj.broadcastUpdate();
+            %--------------------------------------------------------------
+            notify( obj, "UPDATE");
+        end % 
     end % Concrete ordinary methods
 
     methods
