@@ -35,7 +35,7 @@ classdef bayesOpt < handle
             % Model     --> (string) surrogate model type. Must be either
             %               {"gpr"} or "rf".
             % AcqFcn    --> (string) Acquisition function name. Must be 
-            %               either {"ucb"} or "ei".
+            %               either {"ucb"}, "aei" or "ei".
             %--------------------------------------------------------------
             arguments
                 Model  (1,1)    string    = "gpr"
