@@ -1,4 +1,4 @@
-classdef bayesOpt 
+classdef bayesOpt < handle
     % Bayesian optimisation class
 
     properties ( SetAccess = protected, Dependent  )
@@ -31,7 +31,7 @@ classdef bayesOpt
             % Model     --> (string) surrogate model type. Must be either
             %               {"gpr"} or "rf".
             % AcqFcn    --> (string) Acquisition function name. Must be 
-            %               either {"ucb"} or "ei".
+            %               either {"ucb"}, "aei" or "ei".
             %--------------------------------------------------------------
             arguments
                 Model  (1,1)    string    = "gpr"
@@ -149,8 +149,8 @@ classdef bayesOpt
             %--------------------------------------------------------------
             arguments
                 obj (1,1)   bayesOpt    { mustBeNonempty( obj ) }
-                A   (1,:)   double      { mustBeNonempty( A ) }
-                B   (1,:)   double      { mustBeNonempty( B ) }
+                A   (1,:)   double      { mustBeNonempty( A ) } = min( obj.X )
+                B   (1,:)   double      { mustBeNonempty( B ) } = max( obj.X )
             end
             M = obj.ModelObj;
             M.conDataCoding( A, B );
@@ -224,6 +224,15 @@ classdef bayesOpt
             BestX = fmincon( Problem );
             obj.AcqObj.setBestX( BestX );
         end % acqFcnMaxTemplate
+
+        function broadcastUpdate( obj )
+            %--------------------------------------------------------------
+            % Broadcast the UPDATE message to generate a new function query
+            %
+            % obj.broadcastUpdate();
+            %--------------------------------------------------------------
+            notify( obj, "UPDATE");
+        end % 
     end % Concrete ordinary methods
 
     methods
