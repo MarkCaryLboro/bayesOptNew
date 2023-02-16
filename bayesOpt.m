@@ -1,10 +1,6 @@
 classdef bayesOpt < handle
     % Bayesian optimisation class
 
-    events
-        UPDATE                                                              % Run newly requested simulation                                                   
-    end
-
     properties ( SetAccess = protected, Dependent  )
         AcqFcn   (1,1)   string                                             % Acquisition function type
         Model    (1,1)   string                                             % Surrogate model type
@@ -153,8 +149,8 @@ classdef bayesOpt < handle
             %--------------------------------------------------------------
             arguments
                 obj (1,1)   bayesOpt    { mustBeNonempty( obj ) }
-                A   (1,:)   double      { mustBeNonempty( A ) }
-                B   (1,:)   double      { mustBeNonempty( B ) }
+                A   (1,:)   double      { mustBeNonempty( A ) } = min( obj.X )
+                B   (1,:)   double      { mustBeNonempty( B ) } = max( obj.X )
             end
             M = obj.ModelObj;
             M.conDataCoding( A, B );
