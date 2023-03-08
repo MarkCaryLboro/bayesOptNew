@@ -220,7 +220,7 @@ classdef bayesOpt < handle
                 Xmax = obj.X( Idx, : );
                 obj.AcqObj = obj.AcqObj.setBestX( Xmax );
             end
-            Problem.x0 = obj.Xbest;
+            Problem.x0 = obj.Xnext;
             BestX = fmincon( Problem );
             obj.AcqObj.setBestX( BestX );
         end % acqFcnMaxTemplate
