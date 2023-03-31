@@ -6,7 +6,6 @@ classdef bayesOpt < handle
         Model    (1,1)   string                                             % Surrogate model type
         X        (:,:)   double                                             % Current sample input data
         Y        (:,1)   double                                             % Current function query data
-        Xnext    (1,:)   double                                             % Next point to query
         ModelObj (1,1)                                                      % Surrogate model object
         HyperPar (1,1)   double                                             % Hyper-parameter
         Xbest    (1,:)   double                                             % Best known input configuration
@@ -17,6 +16,7 @@ classdef bayesOpt < handle
 
     properties ( SetAccess = protected )
         AcqObj   (1,1)                                                      % Acquisition function object
+        Xnext    (1,:)   double                                             % Next point to query
     end % Portected properties
     
     methods
@@ -87,7 +87,6 @@ classdef bayesOpt < handle
             %--------------------------------------------------------------
             M.setTrainingData( X, Y );
             M.trainModel;
-            obj.AcqObj.setBestX( M.Xmax );
         end % setTrainingData
 
         function [ Ypred, Ysd, Yint ] = predict( obj, Xnew, Alpha )
@@ -212,17 +211,11 @@ classdef bayesOpt < handle
                     obj.AcqObj.resetCounter();
             end
             Problem.objective = @(X)obj.AcqObj.evalFcn( X, B );
-            if isinf( obj.Xbest )
-                %----------------------------------------------------------
-                % Select a starting point
-                %----------------------------------------------------------
-                [ ~, Idx ] = max( obj.Y );
-                Xmax = obj.X( Idx, : );
-                obj.AcqObj = obj.AcqObj.setBestX( Xmax );
+            if isempty( obj.Xnext )
+                obj.Xnext = obj.Xbest;
             end
-            Problem.x0 = obj.Xbest;
-            BestX = fmincon( Problem );
-            obj.AcqObj.setBestX( BestX );
+            Problem.x0 = obj.Xnext;
+            obj.Xnext = fmincon( Problem );
         end % acqFcnMaxTemplate
 
         function broadcastUpdate( obj )
@@ -235,11 +228,7 @@ classdef bayesOpt < handle
         end % 
     end % Concrete ordinary methods
 
-    methods
-        function Xnext = get.Xnext( obj )
-            Xnext = obj.AcqObj.BestX;
-        end % get.Xnext
-        
+    methods        
         function B = get.HyperPar( obj )
             B = obj.AcqObj.Beta;
         end % get.Beta
