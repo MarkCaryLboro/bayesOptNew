@@ -30,24 +30,6 @@ classdef ( Abstract = true) acqFcn < handle
     end % Abstract method signatures
 
     methods
-        function obj = setBestX( obj, Xmax )
-            %--------------------------------------------------------------
-            % Set the BestX property denoting the location of the fittest
-            % query to date
-            %
-            % obj = obj.setBestX( Xmax );
-            % 
-            % Input Arguments:
-            %
-            % Xmax --> (double) location of best acquisition function value
-            %--------------------------------------------------------------
-            arguments
-                obj  (1,1)         { mustBeNonempty( obj ) }
-                Xmax (1,:)  double { mustBeNonempty( Xmax ) } = obj.BestX
-            end
-            obj.BestX = Xmax( 1,: );
-        end % setBestX
-
         function obj = addFcnSample2Data( obj, Xnew, Ynew )
             %--------------------------------------------------------------
             % Add a new function sample to the training data for the
