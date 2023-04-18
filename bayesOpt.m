@@ -12,6 +12,7 @@ classdef bayesOpt < handle
         Ybest    (1,1)   double                                             % Best known function query
         Xlo      (1,:)   double                                             % Lower bound for x-data (for data coding)
         Xhi      (1,:)   double                                             % Upper bound for x-data (for data coding)
+        Bidx     (1,1)   double                                             % Pointer to best result
     end % dependent properties
 
     properties ( SetAccess = protected )
@@ -261,9 +262,14 @@ classdef bayesOpt < handle
         function X = get.Xbest( obj )
             % Return the input configuration from the sample pool
             % corresponding to the best function query
-            [ ~, Idx ] = max( obj.Y );
-            X = obj.X( Idx, : );
+            X = obj.X( obj.Bidx, : );
         end % get.Xbest
+
+        function B = get.Bidx( obj )
+            % Return the position of the best result in the data pool
+            [ ~, Idx ] = max( obj.Y );
+            B = max( Idx );
+        end % get.Bidx
 
         function M = get.Model( obj )
             % Return the surrogate model type
