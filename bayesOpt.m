@@ -213,20 +213,23 @@ classdef bayesOpt < handle
             end
             Problem.objective = @(X)obj.AcqObj.evalFcn( X, B );
             if isempty( obj.Xnext )
-                obj.Xnext = obj.Xbest;
+                obj = obj.setXbestAsXnext();
             end
             Problem.x0 = obj.Xnext;
             obj.Xnext = fmincon( Problem );
         end % acqFcnMaxTemplate
 
-        function broadcastUpdate( obj )
+        function obj = setXbestAsXnext( obj )
             %--------------------------------------------------------------
-            % Broadcast the UPDATE message to generate a new function query
+            % Set the next query to the current best value
             %
-            % obj.broadcastUpdate();
+            % obj = obj.setXbestAsXnext();
             %--------------------------------------------------------------
-            notify( obj, "UPDATE");
-        end % 
+            arguments
+                obj (1,1) bayesOpt { mustBeNonempty( obj ) }
+            end
+            obj.Xnext = obj.Xbest;
+        end % setXbestAsXnext
     end % Concrete ordinary methods
 
     methods        
