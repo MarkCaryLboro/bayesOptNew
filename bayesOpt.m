@@ -173,7 +173,7 @@ classdef bayesOpt < handle
                 Args.lb        (1,:) double                
                 Args.ub        (1,:) double                
                 Args.options   (1,1) optim.options.Fmincon = optimoptions( "fmincon")
-                Args.nonlincon (1,1) function_handle       
+                Args.nonlcon   (1,1) function_handle       
                 Args.Aineq     (:,:) double                
                 Args.bineq     (:,1) double                
                 Args.Aeq       (:,:) double                
@@ -182,7 +182,7 @@ classdef bayesOpt < handle
             %--------------------------------------------------------------
             % Parse the optional arguments
             %--------------------------------------------------------------
-            Names = [ "lb", "ub", "nonlincon", "Aineq", "binq", "Aeq",...
+            Names = [ "lb", "ub", "nonlcon", "Aineq", "binq", "Aeq",...
                        "beq", "options" ];
             for Q = 1:numel( Names )
                try
