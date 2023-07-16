@@ -6,8 +6,8 @@ classdef ucb < acqFcn
     end % Abstract constant properties    
     
     properties ( SetAccess = protected )
-        Scale (1,1) double { mustBePositive( Scale ), mustBeReal( Scale ) } = 1
-        Beta  
+        Scale   (1,1) double { mustBePositive( Scale ), mustBeReal( Scale ) } = 1
+        Beta
     end % protected properties
 
     methods
@@ -40,15 +40,26 @@ classdef ucb < acqFcn
             % Beta  --> Hyperparameter value
             %--------------------------------------------------------------
             arguments
-                obj (1,1)   ucb       {mustBeNonempty( obj )}
-                X   (:,:)   double    {mustBeNonempty( X )}
-                Beta  (1,1) double    { mustBeGreaterThanOrEqual( Beta, 0),...
-                                        mustBeLessThanOrEqual( Beta, 1 )} = obj.Beta
+                obj    (1,1)   ucb       {mustBeNonempty( obj )}
+                X      (:,:)   double    {mustBeNonempty( X )}
+                Beta   (1,1)   double    { mustBeGreaterThanOrEqual( Beta, 0),...
+                                           mustBeLessThanOrEqual( Beta, 1 )} = obj.Beta
             end
             obj = obj.setBeta( Beta );
             [ Mu, Sigma ] = obj.ModelObj.predict( X );
-            Fcn = Mu + sqrt( Beta ) * Sigma;
-            Fcn = -Fcn;
+            Explore = sqrt( Beta ) * Sigma;
+            if obj.Problem
+                %----------------------------------------------------------
+                % Maximisation problem
+                %----------------------------------------------------------
+                Fcn = Mu + Explore;                                         % add exploration bonus
+                Fcn = -Fcn;                                                 % necessary as fmincon only minimises
+            else
+                %----------------------------------------------------------
+                % Minimisation problem
+                %----------------------------------------------------------
+                Fcn = Mu - Explore;                                         % subtract exploration bonus
+            end 
         end % evalFcn
 
         function obj = setBeta( obj, Beta )

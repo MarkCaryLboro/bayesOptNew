@@ -52,8 +52,20 @@ classdef ei < acqFcn
             [ Z, Mu, Sigma ] = obj.calcZscore( X );
             Zpdf = normpdf( Z );
             Zcdf = normcdf( Z );
-            Fcn = -( Mu - obj.Fmax - obj.Beta ) .* Zcdf - Sigma .* Zpdf;
-            Fcn = ( Sigma > 0 ) .* Fcn;
+            Explore = Sigma .* Zpdf;
+            Exploit = ( Mu - obj.Fmax - obj.Beta ) .* Zcdf;
+            if obj.Problem
+                %----------------------------------------------------------
+                % Maximisation problem
+                %----------------------------------------------------------
+                Fcn = Exploit + Explore;                                    % add exploration bonus
+                Fcn = -Fcn;                                                 % necessary as fmincon only minimises
+            else
+                %----------------------------------------------------------
+                % Minimisation problem
+                %----------------------------------------------------------
+                Fcn = Exploit - Explore;                                    % subtract exploration bonus
+            end 
         end % evalFcn
 
         function obj = setBeta( obj, Beta )

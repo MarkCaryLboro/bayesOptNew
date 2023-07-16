@@ -13,6 +13,7 @@ classdef bayesOpt < handle
         Xlo      (1,:)   double                                             % Lower bound for x-data (for data coding)
         Xhi      (1,:)   double                                             % Upper bound for x-data (for data coding)
         Bidx     (1,1)   double                                             % Pointer to best result
+        Problem  (1,1)   string                                             % Either "maximisation" or "minimisation"
     end % dependent properties
 
     properties ( SetAccess = protected )
@@ -64,6 +65,24 @@ classdef bayesOpt < handle
             A = obj.AcqObj;
             A.setBeta( Beta );
         end % setHyperPar
+
+        function obj = setProblemTypeState( obj, M )
+            %--------------------------------------------------------------
+            % Set the problem type property ( MaxFnc ).
+            %
+            % obj = obj.setProblemTypeState( M );
+            %
+            % Input Arguments:
+            %
+            % M --> (logical) set to true for a maximisation problem, and
+            %                 false for a minimisation problem.
+            %--------------------------------------------------------------
+            arguments
+                obj (1,:) bayesOpt  
+                M   (1,1) logical   = true
+            end
+            obj.AcqObj.setModelType( M );
+        end % setProblemTypeState
 
         function obj = setTrainingData( obj, X, Y )
             %--------------------------------------------------------------
@@ -186,16 +205,16 @@ classdef bayesOpt < handle
                        "beq", "options" ];
             for Q = 1:numel( Names )
                try
-                   Problem.( Names( Q ) ) = Args.( Names( Q ) );
+                   PROBLEM.( Names( Q ) ) = Args.( Names( Q ) );
                catch
-                   Problem.( Names( Q ) ) = [];
+                   PROBLEM.( Names( Q ) ) = [];
                end
             end
             %--------------------------------------------------------------
             % Set up the optimisation problem
             %--------------------------------------------------------------
-            Problem.options.Display = "iter";
-            Problem.solver = "fmincon"; 
+            PROBLEM.options.Display = "iter";
+            PROBLEM.solver = "fmincon"; 
             %--------------------------------------------------------------
             % Set the hyperparameter
             %--------------------------------------------------------------
@@ -211,12 +230,12 @@ classdef bayesOpt < handle
                     % the optimisation is called
                     obj.AcqObj.resetCounter();
             end
-            Problem.objective = @(X)obj.AcqObj.evalFcn( X, B );
+            PROBLEM.objective = @(X)obj.AcqObj.evalFcn( X, B );
             if isempty( obj.Xnext )
                 obj = obj.setXbestAsXnext();
             end
-            Problem.x0 = obj.Xnext;
-            obj.Xnext = fmincon( Problem );
+            PROBLEM.x0 = obj.Xnext;
+            obj.Xnext = fmincon( PROBLEM );
         end % acqFcnMaxTemplate
 
         function obj = setXbestAsXnext( obj )
@@ -259,7 +278,12 @@ classdef bayesOpt < handle
 
         function Y = get.Ybest( obj )
             % Return the best query from the sample pool
-            Y = max( obj.Y );
+            switch obj.Problem
+                case "Maximisation"
+                    Y = max( obj.Y );
+                otherwise
+                    Y = min( obj.Y );
+            end
         end % get.Ybest
 
         function X = get.Xbest( obj )
@@ -268,10 +292,23 @@ classdef bayesOpt < handle
             X = obj.X( obj.Bidx, : );
         end % get.Xbest
 
+        function P = get.Problem( obj )
+            % return the problem type
+            if obj.AcqObj.Problem
+                P = "Maximisation";
+            else
+                P = "Minimisation";
+            end
+        end % get.Problem
+
         function B = get.Bidx( obj )
             % Return the position of the best result in the data pool
-            [ ~, Idx ] = max( obj.Y );
-            B = max( Idx );
+            switch obj.Problem
+                case "Maximisation"
+                    [ ~, B ] = max( obj.Y );
+                otherwise
+                    [ ~, B ] = min( obj.Y );
+            end
         end % get.Bidx
 
         function M = get.Model( obj )
