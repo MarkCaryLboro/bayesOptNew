@@ -11,7 +11,8 @@ classdef ( Abstract = true) acqFcn < handle
 
     properties ( SetAccess = protected )
         ModelObj (1,1)                                                      % Surrogate model object
-        BestX    (1,:)  double = -inf
+        BestX    (1,:)  double  = -inf
+        Problem  (1,1)  logical = true
     end % protected properties
 
     properties ( SetAccess = protected, Dependent )
@@ -30,6 +31,24 @@ classdef ( Abstract = true) acqFcn < handle
     end % Abstract method signatures
 
     methods
+        function obj = setModelType( obj, M )
+            %--------------------------------------------------------------
+            % Set the problem type property ( Problem ).
+            %
+            % obj = obj.setModelType( M );
+            %
+            % Input Arguments:
+            %
+            % M --> (logical) set to true for a maximisation problem, and
+            %                 false for a minimisation problem.
+            %--------------------------------------------------------------
+            arguments
+                obj (1,:)   
+                M   (1,1) logical   = true
+            end
+            obj.Problem = M;
+        end % setModelType
+
         function obj = addFcnSample2Data( obj, Xnew, Ynew )
             %--------------------------------------------------------------
             % Add a new function sample to the training data for the

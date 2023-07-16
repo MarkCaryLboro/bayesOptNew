@@ -35,7 +35,7 @@ classdef aei < acqFcn
             %--------------------------------------------------------------
             arguments
                 ModelObj (1,1)         { mustBeNonempty( ModelObj ) }
-                Beta     (1,3)  double      = [ 1.0, 1.05, 0.05 ]           % [ R0, M, D ]
+                Beta     (1,3)  double      = [ 1.0, 1.05, 0.015 ]          % [ R0, M, D ]
             end
             obj = obj.setBeta( Beta );
             obj.ModelObj = ModelObj;
@@ -109,9 +109,20 @@ classdef aei < acqFcn
             [ Z, Mu, Sigma ] = obj.calcZscore( X );
             Zpdf = normpdf( Z );
             Zcdf = normcdf( Z );
-            Fcn = ( Mu - obj.Fmax ) .* Zcdf + obj.R * Sigma .* Zpdf;
-            Fcn = - Fcn;
-            Fcn = ( Sigma > 0 ) .* Fcn;
+            Explore = obj.R * Sigma .* Zpdf;
+            Exploit = ( Mu - obj.Fmax ) .* Zcdf;
+            if obj.Problem
+                %----------------------------------------------------------
+                % Maximisation problem
+                %----------------------------------------------------------
+                Fcn = Exploit + Explore;                                    % add exploration bonus
+                Fcn = -Fcn;                                                 % necessary as fmincon only minimises
+            else
+                %----------------------------------------------------------
+                % Minimisation problem
+                %----------------------------------------------------------
+                Fcn = Exploit - Explore;                                    % subtract exploration bonus
+            end 
         end % evalFcn
 
         function obj = setBeta( obj, Beta )
