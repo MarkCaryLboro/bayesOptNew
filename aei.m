@@ -65,22 +65,24 @@ classdef aei < acqFcn
             end
         end % setExpRateLimits
 
-        function Fcn = evalFcn( obj, X, Beta )
+        function Fcn = evalFcn( obj, X, Coded, Beta )
             %--------------------------------------------------------------
-            % Evaluate the EI acquisition function at the location
+            % Evaluate the AEI acquisition function at the location
             % specified
             %
-            % Fcn = obj.evalFcn( X, Beta );
+            % Fcn = obj.evalFcn( X, Beta, Coded );
             %
             % Input Arguments:
             %
-            % X       --> Points to evaluate the acquisition function
-            % Beta    --> Hyperparameter value
+            % X     --> Points to evaluate the acquisition function
+            % Beta  --> Hyperparameter value
+            % Coded --> True (False) if inputs are coded (decoded)
             %--------------------------------------------------------------
             arguments
-                obj     (1,1)   aei         {mustBeNonempty( obj )}
-                X       (:,:)   double      {mustBeNonempty( X )}
-                Beta    (1,3) double      = obj.Beta
+                obj    (1,1)   aei       {mustBeNonempty( obj )}
+                X      (:,:)   double    {mustBeNonempty( X )}
+                Coded  (1,1)   logical                                      = false
+                Beta   (1,:)   double                                       = obj.Beta
             end
             %--------------------------------------------------------------
             % Need a persitent variable for the rate update
@@ -89,6 +91,9 @@ classdef aei < acqFcn
             if isempty( Xlast ) || obj.Reset
                 Xlast = X;
                 obj.Reset = false;
+            end
+            if Coded
+                X = obj.ModelObj.decode( X );
             end
             obj = obj.setBeta( Beta );
             [ ~, ~, D ] = obj.getHyperParams();

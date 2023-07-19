@@ -92,8 +92,8 @@ classdef ( Abstract = true ) surrogateModel < handle
             %
             % Dc --> Coded input data
             %--------------------------------------------------------------
-            [ A, B, M ] = obj.dataCodingInfo( obj.X );
-            D = 0.5 .* Dc .* ( B - A ) + M;
+            [ A, B ] = obj.dataCodingInfo( );
+            D = Dc .* ( B - A ) + A;
         end % decode
 
         function obj = setVarUnits( obj, Xunits, Yunits )
@@ -188,14 +188,14 @@ classdef ( Abstract = true ) surrogateModel < handle
 
         function Xc = code( obj, X )
             %--------------------------------------------------------------
-            % Code data onto the interval [-1,1]
+            % Code data onto the interval [0,1]
             %
             % Input Arguments:
             %
             % X --> (double) data matrix
             %--------------------------------------------------------------
-            [ A, B, M ] = obj.dataCodingInfo();
-            Xc = 2 * ( X - M ) ./ ( B - A );
+            [ A, B ] = obj.dataCodingInfo();
+            Xc = ( X - A ) ./ ( B - A );
         end % code
     end % ordinary method signatures
 

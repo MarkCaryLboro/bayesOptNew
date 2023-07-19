@@ -30,23 +30,28 @@ classdef ei < acqFcn
             obj.ModelObj = ModelObj;
         end % constructor
 
-        function Fcn = evalFcn( obj, X, Beta )
+        function Fcn = evalFcn( obj, X, Coded, Beta )
             %--------------------------------------------------------------
             % Evaluate the EI acquisition function at the location
             % specified
             %
-            % Fcn = obj.evalFcn( X, Beta );
+            % Fcn = obj.evalFcn( X, Beta, Coded );
             %
             % Input Arguments:
             %
             % X     --> Points to evaluate the acquisition function
-            % Beta    --> Hyperparameter value
+            % Beta  --> Hyperparameter value
+            % Coded --> True (False) if inputs are coded (decoded)
             %--------------------------------------------------------------
             arguments
-                obj (1,1)   ei          {mustBeNonempty( obj )}
-                X   (:,:)   double      {mustBeNonempty( X )}
-                Beta  (1,1)   double      { mustBeGreaterThanOrEqual( Beta, 0),...
-                                          mustBeLessThanOrEqual( Beta, 10 )} = obj.Beta
+                obj    (1,1)   ei        {mustBeNonempty( obj )}
+                X      (:,:)   double    {mustBeNonempty( X )}
+                Coded  (1,1)   logical                                      = false
+                Beta   (1,1)   double    { mustBeGreaterThanOrEqual( Beta, 0),...
+                                           mustBeLessThanOrEqual( Beta, 1 )} = obj.Beta
+            end
+            if Coded
+                X = obj.ModelObj.decode( X );
             end
             obj = obj.setBeta( Beta );
             [ Z, Mu, Sigma ] = obj.calcZscore( X );

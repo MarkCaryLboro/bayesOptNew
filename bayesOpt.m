@@ -211,6 +211,11 @@ classdef bayesOpt < handle
                end
             end
             %--------------------------------------------------------------
+            % Code the bound constraints
+            %--------------------------------------------------------------
+            PROBLEM.lb = obj.code( PROBLEM.lb );
+            PROBLEM.ub = obj.code( PROBLEM.ub );
+            %--------------------------------------------------------------
             % Set up the optimisation problem
             %--------------------------------------------------------------
             PROBLEM.options.Display = "iter";
@@ -230,12 +235,13 @@ classdef bayesOpt < handle
                     % the optimisation is called
                     obj.AcqObj.resetCounter();
             end
-            PROBLEM.objective = @(X)obj.AcqObj.evalFcn( X, B );
+            PROBLEM.objective = @(X)obj.AcqObj.evalFcn( X, true, B );
             if isempty( obj.Xnext )
                 obj = obj.setXbestAsXnext();
             end
-            PROBLEM.x0 = obj.Xnext;
-            obj.Xnext = fmincon( PROBLEM );
+            PROBLEM.x0 = obj.code( obj.Xnext );
+            Xnew = fmincon( PROBLEM );
+            obj.Xnext = obj.decode( Xnew );
         end % acqFcnMaxTemplate
 
         function obj = setXbestAsXnext( obj )
@@ -326,4 +332,32 @@ classdef bayesOpt < handle
             A = obj.AcqObj.FcnName;
         end % get.AcqFcn
     end % get/set methods
+
+    methods ( Access = protected )
+        function Xc = code( obj, X )
+            %--------------------------------------------------------------
+            % Map the input data [a, b] onto the interval [0, 1]
+            %
+            % Input Arguments:
+            %
+            % X --> (double) data matrix
+            %--------------------------------------------------------------
+            M = obj.AcqObj.ModelObj;
+            Xc = M.code( X );
+        end % code        end % code
+
+        function X = decode( obj, Xc )
+            %--------------------------------------------------------------
+            % Map the coded input data [-1, 1] onto the interval [a, b]
+            %
+            % D = obj.decode( Dc );
+            %
+            % Input Arguments:
+            %
+            % Dc --> Coded input data
+            %--------------------------------------------------------------
+            M = obj.AcqObj.ModelObj;
+            X = M.decode( Xc );
+        end % decode
+    end % protected methods
 end % classdef
