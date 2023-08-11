@@ -13,7 +13,7 @@ classdef bayesOpt < handle
         Xlo      (1,:)   double                                             % Lower bound for x-data (for data coding)
         Xhi      (1,:)   double                                             % Upper bound for x-data (for data coding)
         Bidx     (1,1)   double                                             % Pointer to best result
-        Problem  (1,1)   string                                             % Either "maximisation" or "minimisation"
+        Problem  (1,1)   optimisationType                                   % Either "maximisation" or "minimisation"
     end % dependent properties
 
     properties ( SetAccess = protected )
@@ -74,14 +74,16 @@ classdef bayesOpt < handle
             %
             % Input Arguments:
             %
-            % M --> (logical) set to true for a maximisation problem, and
-            %                 false for a minimisation problem.
+            % M --> (string) set to "Maximisation" or "Minimisation" as 
+            %                appropriate.
             %--------------------------------------------------------------
             arguments
                 obj (1,:) bayesOpt  
-                M   (1,1) logical   = true
+                M   (1,1) string          { mustBeMember( M, ...
+                                            ["Maximisation",...
+                                             "Minimisation"] ) }            = "Maximisation"
             end
-            obj.AcqObj.setModelType( M );
+            obj.AcqObj.setProblemType( M );
         end % setProblemTypeState
 
         function obj = setTrainingData( obj, X, Y )
@@ -300,11 +302,7 @@ classdef bayesOpt < handle
 
         function P = get.Problem( obj )
             % return the problem type
-            if obj.AcqObj.Problem
-                P = "Maximisation";
-            else
-                P = "Minimisation";
-            end
+            P = obj.AcqObj.Problem;
         end % get.Problem
 
         function B = get.Bidx( obj )
