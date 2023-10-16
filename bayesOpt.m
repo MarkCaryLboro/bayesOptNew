@@ -191,8 +191,8 @@ classdef bayesOpt < handle
             %--------------------------------------------------------------
             arguments
                 obj            (1,1)            { mustBeNonempty( obj ) }
-                Args.lb        (1,:) double                
-                Args.ub        (1,:) double                
+                Args.lb        (1,:) double                = obj.Xlo          
+                Args.ub        (1,:) double                = obj.Xhi
                 Args.options   (1,1) optim.options.Fmincon = optimoptions( "fmincon")
                 Args.nonlcon   (1,1) function_handle       
                 Args.Aineq     (:,:) double                
