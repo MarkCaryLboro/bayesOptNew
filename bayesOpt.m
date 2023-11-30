@@ -47,6 +47,37 @@ classdef bayesOpt < handle
             obj.AcqObj = eval( Str );
         end % constructor
 
+        function obj = setXnext( obj, X )
+            %--------------------------------------------------------------
+            % Set the Xnext property. Limits are clipped to the predefined
+            % experimental bounds
+            %
+            % obj = obj.setXnext( X );
+            %
+            % Input Arguments:
+            %
+            % X --> (double) Vector of parameter values
+            %--------------------------------------------------------------
+            arguments
+                obj     (1,1) bayesOpt  { mustBeNonempty( obj ) }
+                X       (1,:) double            
+            end
+            %--------------------------------------------------------------
+            % Dimension check
+            %--------------------------------------------------------------
+            Ok = ( numel( X ) == numel( obj.Xlo ) );
+            assert( Ok, "Input argument must have %4.0f elements",...
+                        numel( obj.Xlo ) );
+            %--------------------------------------------------------------
+            % Clip the limits
+            %--------------------------------------------------------------
+            Idx = ( X < obj.Xlo );
+            X( Idx ) = obj.Xlo( Idx );
+            Idx = ( X > obj.Xhi );
+            X( Idx ) = obj.Xhi( Idx );
+            obj.Xnext = X;
+        end % setXnext
+
         function obj = setHyperPar( obj, Beta )
             %--------------------------------------------------------------
             % Set the hyperparameter value for the acquisition function
@@ -59,7 +90,7 @@ classdef bayesOpt < handle
             % Beta  --> (double) Hyperparameter value
             %--------------------------------------------------------------
             arguments
-                obj     (1,1)           { mustBeNonempty( obj ) }
+                obj     (1,1)   bayesOpt       { mustBeNonempty( obj ) }
                 Beta    (1,1)   double
             end
             A = obj.AcqObj;
@@ -213,11 +244,6 @@ classdef bayesOpt < handle
                end
             end
             %--------------------------------------------------------------
-            % Code the bound constraints
-            %--------------------------------------------------------------
-            PROBLEM.lb = obj.code( PROBLEM.lb );
-            PROBLEM.ub = obj.code( PROBLEM.ub );
-            %--------------------------------------------------------------
             % Set up the optimisation problem
             %--------------------------------------------------------------
             PROBLEM.options.Display = "iter";
@@ -227,7 +253,7 @@ classdef bayesOpt < handle
             %--------------------------------------------------------------
             switch lower( class( obj.AcqObj ) )
                 case 'ucb'
-                    B = obj.AcqObj.sampleGamma( numel(obj.Y) );
+                    B = obj.AcqObj.sampleGamma( numel( obj.Y ) );
                 otherwise
                     B = obj.HyperPar;
             end
@@ -237,13 +263,12 @@ classdef bayesOpt < handle
                     % the optimisation is called
                     obj.AcqObj.resetCounter();
             end
-            PROBLEM.objective = @(X)obj.AcqObj.evalFcn( X, true, B );
+            PROBLEM.objective = @(X)obj.AcqObj.evalFcn( X, B );
             if isempty( obj.Xnext )
                 obj = obj.setXbestAsXnext();
             end
-            PROBLEM.x0 = obj.code( obj.Xnext );
-            Xnew = fmincon( PROBLEM );
-            obj.Xnext = obj.decode( Xnew );
+            PROBLEM.x0 = obj.Xnext;
+            obj.Xnext = fmincon( PROBLEM );
         end % acqFcnMaxTemplate
 
         function obj = setXbestAsXnext( obj )

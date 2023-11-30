@@ -27,7 +27,7 @@ classdef ucb < acqFcn
             obj.ModelObj = ModelObj;
         end % constructor
 
-        function Fcn = evalFcn( obj, X, Coded, Beta )
+        function Fcn = evalFcn( obj, X, Beta )
             %--------------------------------------------------------------
             % Evaluate the UCB acquisition function at the location
             % specified
@@ -38,21 +38,16 @@ classdef ucb < acqFcn
             %
             % X     --> Points to evaluate the acquisition function
             % Beta  --> Hyperparameter value
-            % Coded --> True (False) if inputs are coded (decoded)
             %--------------------------------------------------------------
             arguments
                 obj    (1,1)   ucb       {mustBeNonempty( obj )}
                 X      (:,:)   double    {mustBeNonempty( X )}
-                Coded  (1,1)   logical                                      = false
                 Beta   (1,1)   double    { mustBeGreaterThanOrEqual( Beta, 0),...
                                            mustBeLessThanOrEqual( Beta, 1 )} = obj.Beta
             end
             obj = obj.setBeta( Beta );
-            if Coded
-                X = obj.ModelObj.decode( X );
-            end
             [ Mu, Sigma ] = obj.ModelObj.predict( X );
-            Explore = sqrt( Beta ) * Sigma;
+            Explore = obj.ExpMult * sqrt( Beta ) * Sigma;
             if obj.Problem
                 %----------------------------------------------------------
                 % Maximisation problem

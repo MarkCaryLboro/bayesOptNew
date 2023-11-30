@@ -13,6 +13,7 @@ classdef ( Abstract = true) acqFcn < handle
         ModelObj (1,1)                                                      % Surrogate model object
         BestX    (1,:)  double  = -inf
         Problem  (1,1)  optimisationType = "Maximisation"
+        ExpMult  (1,1)  double  { mustBePositive( ExpMult ) } = 5
     end % protected properties
 
     properties ( SetAccess = protected, Dependent )
@@ -22,6 +23,7 @@ classdef ( Abstract = true) acqFcn < handle
 
     properties ( Access = protected, Dependent )
         Fmax     double                                                     % Maximum function evaluation
+        Fmin     double                                                     % Minimum function evaluation
         Nvar     double                                                     % Number of input variables               
     end % protected dependent properties
 
@@ -88,12 +90,13 @@ classdef ( Abstract = true) acqFcn < handle
         end % get.Nvar
 
         function Fmax = get.Fmax( obj )
-            % Return best value of acquisition function
-            try
+            % Return maximum value of data pool
                 Fmax = obj.ModelObj.Fmax;
-            catch
-                Fmax = NaN;
-            end
         end % get.Fmax
+
+        function Fmin = get.Fmin( obj )
+            % Return minimum value of data pool
+                Fmin = obj.ModelObj.Fmin;
+        end % get.Fmin    
     end % get/set method signatures
 end % classdef

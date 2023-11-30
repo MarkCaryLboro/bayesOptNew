@@ -6,7 +6,7 @@ classdef ei < acqFcn
     end % Abstract constant properties
     
     properties ( SetAccess = protected )
-        Beta  
+        Beta  (1,1) double  { mustBeGreaterThanOrEqual( Beta, 0) }          = 0.01
     end
 
     methods
@@ -23,7 +23,7 @@ classdef ei < acqFcn
             %--------------------------------------------------------------
             arguments
                 ModelObj (1,1)          { mustBeNonempty( ModelObj ) }
-                Beta       (1,1) double   { mustBeGreaterThanOrEqual( Beta, 0),...
+                Beta     (1,1) double   { mustBeGreaterThanOrEqual( Beta, 0),...
                                           mustBeLessThanOrEqual( Beta, 1)} = 0.01
             end
             obj.Beta = Beta;

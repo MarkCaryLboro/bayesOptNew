@@ -28,8 +28,10 @@ classdef ( Abstract = true ) surrogateModel < handle
         DataOk      logical                                                 % True if data dimensions are consistent
         N           int8                                                    % Number of variables
         NumPoints   int64                                                   % Number of data points
-        Fmax        double                                                  % Best function query discovered so far
-        Xmax        double                                                  % Location of best function query
+        Fmax        double                                                  % Maximum function query discovered so far
+        Xmax        double                                                  % Location of maximum function query
+        Fmin        double                                                  % Minimum function query discovered so far
+        Xmin        double                                                  % Location of minimum function query
     end % dependent properties
 
     methods ( Abstract = true )
@@ -262,13 +264,24 @@ classdef ( Abstract = true ) surrogateModel < handle
 
     methods
         function F = get.Fmax( obj )
-            % Return best known function query value to date
+            % Return maximum function query value to date
             F = max( obj.Y );
         end
 
         function X = get.Xmax( obj )
             % Return location of best known function query to date
             [ ~, Idx ] = max( obj.Y );
+            X = obj.X( Idx, : );
+        end
+        
+        function F = get.Fmin( obj )
+            % Return minimum function query value to date
+            F = min( obj.Y );
+        end
+
+        function X = get.Xmin( obj )
+            % Return location of best known function query to date
+            [ ~, Idx ] = min( obj.Y );
             X = obj.X( Idx, : );
         end
         
