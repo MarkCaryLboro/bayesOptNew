@@ -33,6 +33,25 @@ classdef ( Abstract = true) acqFcn < handle
     end % Abstract method signatures
 
     methods
+        function obj = setExplorationGain( obj, Mult )
+            %--------------------------------------------------------------
+            % Set the exploration rate gain. Set larger than 1 to increase
+            % exploration rate. If set too large the algorithm may become
+            % unstable.
+            %
+            % obj = obj.setExplorationGain( Mult );
+            %
+            % Input Arguments:
+            %
+            % Mult --> (double) exploration rate gain multiplier
+            %--------------------------------------------------------------
+            arguments
+                obj   (1,1)         { mustBeNonempty( obj ) }
+                Mult  (1,1)  double { mustBeGreaterThanOrEqual( Mult, 1 ) } = 1
+            end
+            obj.ExpMult = Mult;
+        end % setExplorationGain
+
         function obj = setProblemType( obj, M )
             %--------------------------------------------------------------
             % Set the problem type property ( Problem ).
