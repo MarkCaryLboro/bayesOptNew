@@ -8,8 +8,8 @@ classdef gpr < surrogateModel
     properties ( SetAccess = protected )
         ModelObj    RegressionGP
         Kernel      kernels         = kernels( "ARDsquaredExponential" )
-        PredMethod  gprPredMethod   = gprPredMethod( "exact" )
-        FitMethod   gprFitMethod    = gprFitMethod( "exact" )
+        PredMethod  gprPredMethod   = gprPredMethod( "sd" )
+        FitMethod   gprFitMethod    = gprFitMethod( "sd" )
     end % protected and abstract property definitions
 
     properties ( SetAccess = protected, Dependent )
